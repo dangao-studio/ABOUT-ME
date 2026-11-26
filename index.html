@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>你覺得我怎麼樣</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: 輕鬆、好奇，像朋友之間傳來傳去的小問卷，但問題要問得出真實印象
+IDEA: 一塊蛋糕，每完成一步就疊上一層，最後點上蠟燭
+PICTURE: 左側一塊會長高的 SVG 蛋糕，層數＝回答進度
+COLOUR and TYPE: 奶油色底、草莓粉、巧克力字、草莓紅點綴；Huninn 圓體標題 + Noto Sans TC 內文
+LAYOUT: 標題，下方蛋糕與題目卡並排，600px 以下改成上下堆疊；下方是大家的回答
+*/
+:root{color-scheme:light dark;
+--bg:light-dark(#fff6ec,#22140f);--ink:light-dark(#3a2219,#f8e9dc);--soft:light-dark(#7a5a4c,#c9ad9d);
+--card:light-dark(#ffffff,#2f1c15);--line:light-dark(#f0dccb,#4a2f24);--pink:light-dark(#f6c1cc,#c77a8a);
+--red:#e2425b;--cream:light-dark(#fffdf8,#f3e3d3)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Noto Sans TC",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Huninn","Noto Sans TC",sans-serif;font-weight:400}
+.band{padding:clamp(28px,4vw,56px) max(5vw,16px);max-width:1180px;margin:0 auto}
+header h1{font-size:clamp(32px,6vw,50px);line-height:1.08;margin:0 0 8px;text-wrap:balance}
+header p{margin:0;color:var(--soft);max-width:60ch}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(20px,4vw,48px);align-items:start;margin-top:28px}
+.cakebox{position:sticky;top:16px;aspect-ratio:1/1;max-height:520px;background:var(--pink);border-radius:28px;overflow:hidden}
+.cakebox svg{position:absolute;inset:0;width:100%;height:100%}
+.layer{animation:drop .5s cubic-bezier(.3,1.5,.5,1)}
+@keyframes drop{from{transform:translateY(-60px);opacity:0}to{transform:none;opacity:1}}
+.flame{animation:flick 1.2s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center bottom}
+@keyframes flick{to{transform:scale(.85,1.1)}}
+@media(prefers-reduced-motion:reduce){.layer,.flame{animation:none}}
+.card{background:var(--card);border:2px solid var(--line);border-radius:24px;padding:clamp(20px,3vw,32px)}
+.step{font-size:14px;color:var(--soft);margin-bottom:6px}
+.bar{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin-bottom:18px}
+.bar i{display:block;height:100%;background:var(--red);border-radius:9px;transition:width .3s}
+.q{font-size:clamp(22px,3vw,28px);line-height:1.3;margin:0 0 16px}
+.sub{color:var(--soft);font-size:14px;margin:-10px 0 16px}
+.opts{display:grid;gap:10px}
+.opt{font:inherit;color:inherit;text-align:start;background:var(--bg);border:2px solid var(--line);border-radius:16px;padding:12px 16px;min-height:48px;cursor:pointer}
+.opt:hover{border-color:var(--pink)}
+.opt.on{border-color:var(--red);background:color-mix(in srgb,var(--red) 10%,var(--bg))}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.scales{display:grid;gap:16px}
+.scale .ends{display:flex;justify-content:space-between;font-size:15px;font-weight:500;margin-bottom:6px}
+.dots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.dot{font:inherit;height:44px;border-radius:12px;border:2px solid var(--line);background:var(--bg);cursor:pointer;color:var(--soft);font-size:13px}
+.dot.on{background:var(--red);border-color:var(--red);color:#fff}
+textarea{width:100%;font-size:16px;line-height:1.5;font-family:inherit;color:inherit;background:var(--bg);border:2px solid var(--line);border-radius:16px;padding:12px 14px;min-height:120px;resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:15px;color:inherit;background:var(--bg);border:2px solid var(--line);border-radius:999px;padding:8px 14px;min-height:44px;cursor:pointer}
+.chip.on{background:var(--red);border-color:var(--red);color:#fff}
+.add{display:flex;gap:8px;margin-top:12px}
+.add input{flex:1;font-size:16px;font-family:inherit;color:inherit;background:var(--bg);border:2px solid var(--line);border-radius:999px;padding:8px 14px;min-height:44px}
+.nav{display:flex;gap:10px;justify-content:space-between;margin-top:20px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:500;border:0;border-radius:999px;padding:12px 22px;min-height:46px;cursor:pointer;background:var(--red);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:default}
+.hint{font-size:13px;color:var(--soft);margin-top:8px}
+.result h2{font-size:clamp(26px,3.6vw,36px);line-height:1.25;margin:4px 0 12px;text-wrap:balance}
+.result h2 em{font-style:normal;color:var(--red)}
+.tag{display:inline-block;background:var(--pink);color:#3a2219;border-radius:999px;padding:3px 12px;font-size:14px;margin:0 6px 6px 0}
+.notes{border-top:2px dashed var(--line);margin-top:14px;padding-top:12px}
+.notes small{color:var(--soft);display:block;margin-top:8px}.notes p{margin:2px 0 0}
+.crowd{margin-top:36px;display:grid;gap:28px}
+.crowd h3{font-size:24px;margin:0 0 10px}
+.spec{display:grid;gap:14px}
+.srow .ends{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}
+.track{position:relative;height:26px;background:var(--line);border-radius:999px}
+.track i{position:absolute;top:50%;width:8px;height:8px;border-radius:50%;background:var(--soft);opacity:.45;transform:translate(-50%,-50%)}
+.track b{position:absolute;top:50%;width:22px;height:22px;border-radius:50%;background:var(--red);border:3px solid var(--card);transform:translate(-50%,-50%)}
+.cloud{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.cloud span{background:var(--pink);color:#3a2219;border-radius:999px;padding:4px 12px;line-height:1.3}
+.cloud small{opacity:.7;margin-left:4px}
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.wall div{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:12px 14px}
+.wall small{display:block;color:var(--soft);font-size:13px;margin-bottom:4px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.who{font-size:14px;color:var(--soft)}
+footer{color:var(--soft);font-size:13px;text-align:center;padding-bottom:32px}
+@media(max-width:600px){.stage{grid-template-columns:minmax(0,1fr)}.cakebox{position:relative;top:0;max-height:260px;aspect-ratio:4/3}}
+</style>
+</head>
+<body>
+<header class="band" style="padding-bottom:0">
+  <h1>你覺得我是個怎樣的人？</h1>
+</header>
+<main class="band" style="padding-top:0">
+  <div class="stage">
+    <div class="cakebox" aria-hidden="true"><svg id="cake" viewBox="0 0 400 400"></svg></div>
+    <section class="card" id="panel" aria-live="polite"></section>
+  </div>
+</main>
+
+
+<script>
+{
+const REL=["看直播認識的","在社群上認識的","現實生活中的朋友","一起合作過","其他"];
+const LEN=["剛認識不久","幾個月","一兩年","很久了"];
+const SC=[["安靜","吵鬧"],["理性","感性"],["好懂","難懂"],["溫和","嘴很毒"],["隨性","認真"],["慢熟","自來熟"]];
+const TAGS=["溫柔","好相處","慢熟","話很多","搞笑","天然呆","認真","很會畫","夜貓子","愛吐槽","可靠","有點怪","怕生","很有梗","心軟","佛系","可愛","很療癒","容易害羞","神秘"];
+const OPEN=[
+ {k:"diff",q:"第一印象跟現在比，你覺得我哪裡不一樣？",s:"",opt:true},
+ {k:"style",q:"有沒有哪件事讓你覺得「這很有我的風格」？",s:"",opt:true},
+ {k:"hidden",q:"你覺得我有什麼優點，可能連我自己都沒發現？",s:"",opt:true},
+ {k:"intro",q:"如果要用一句話跟別人介紹我，你會怎麼說？",s:""},
+ {k:"secret",q:"有什麼想偷偷跟我說的嗎？",s:"只有我看得到",opt:true,priv:true}
+];
+const STEPS=["rel","scales","tags",...OPEN.map(o=>o.k)];
+const COLORS=["#fffdf8","#f6c1cc","#8a4b35","#ffe1a8","#f9d3dc","#c97b63","#fff0c9","#f6c1cc"];
+const blank=()=>({rel:null,len:null,sc:Array(SC.length).fill(null),tags:[],diff:"",style:"",hidden:"",intro:"",secret:""});
+let A=blank(),i=0,done=false;
+const P=document.getElementById("panel"),C=document.getElementById("cake");
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function stepOK(k){
+  if(k==="rel")return A.rel!==null&&A.len!==null;
+  if(k==="scales")return A.sc.every(v=>v!==null);
+  if(k==="tags")return A.tags.length>0;
+  const o=OPEN.find(x=>x.k===k);return o.opt||A[k].trim().length>0;
+}
+function filled(k){
+  if(["rel","scales","tags"].includes(k))return stepOK(k);
+  return A[k].trim().length>0||(k!==STEPS[i]&&STEPS.indexOf(k)<i);
+}
+function drawCake(){
+  const n=done?STEPS.length:STEPS.filter(filled).length;
+  const lh=30,base=340;
+  let s=`<ellipse cx="200" cy="${base+14}" rx="160" ry="20" fill="#000" opacity=".12"/><ellipse cx="200" cy="${base+6}" rx="150" ry="16" fill="var(--cream)" stroke="#e8cfc0" stroke-width="2"/>`;
+  for(let k=0;k<n;k++){
+    const w=130-k*5,y=base-(k+1)*lh,c=COLORS[k%COLORS.length];
+    s+=`<g class="layer"><rect x="${200-w}" y="${y}" width="${w*2}" height="${lh}" rx="8" fill="${c}" stroke="#00000018"/><rect x="${200-w}" y="${y}" width="${w*2}" height="5" rx="3" fill="#fff" opacity=".45"/></g>`;
+  }
+  const top=base-n*lh;
+  if(n>0)for(let k=-2;k<=2;k++)s+=`<circle cx="${200+k*24}" cy="${top-6}" r="9" fill="#e2425b"/><circle cx="${197+k*24}" cy="${top-9}" r="3" fill="#fff" opacity=".6"/>`;
+  if(done)s+=`<rect x="194" y="${top-60}" width="12" height="46" rx="4" fill="#fff0c9" stroke="#e2b77a"/><path class="flame" d="M200 ${top-88} q12 16 0 26 q-12 -10 0 -26z" fill="#ffb02e"/>`;
+  if(n===0)s+=`<text x="200" y="200" text-anchor="middle" font-size="18" fill="#3a2219" opacity=".7">回答後蛋糕會長高</text>`;
+  C.innerHTML=s;
+}
+
+function body(k){
+  if(k==="rel")return `<h2 class="q">先說說，你是怎麼認識我的？</h2>
+    <div class="opts">${REL.map((r,j)=>`<button class="opt${A.rel===j?" on":""}" data-g="rel" data-v="${j}">${r}</button>`).join("")}</div>
+    <h2 class="q" style="font-size:20px;margin-top:22px">認識我多久了？</h2>
+    <div class="opts" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr))">${LEN.map((r,j)=>`<button class="opt${A.len===j?" on":""}" data-g="len" data-v="${j}">${r}</button>`).join("")}</div>`;
+  if(k==="scales")return `<h2 class="q">在你心裡，我比較靠近哪一邊？</h2>
+    <div class="scales">${SC.map((p,r)=>`<div class="scale"><div class="ends"><span>${p[0]}</span><span>${p[1]}</span></div><div class="dots">${[0,1,2,3,4].map(v=>`<button class="dot${A.sc[r]===v?" on":""}" data-r="${r}" data-v="${v}" aria-label="${p[0]}到${p[1]}，第${v+1}格"></button>`).join("")}</div></div>`).join("")}</div>`;
+  if(k==="tags"){
+    const all=[...TAGS,...A.tags.filter(x=>!TAGS.includes(x))],full=A.tags.length>=5;
+    return `<h2 class="q">幫我貼上標籤吧！</h2><p class="sub">最多 5 個（${A.tags.length}/5）</p>
+    <div class="chips">${all.map(t=>`<button class="chip${A.tags.includes(t)?" on":""}" aria-pressed="${A.tags.includes(t)}" data-t="${esc(t)}">${esc(t)}</button>`).join("")}</div>
+    <div class="add"><input id="newtag" maxlength="12" placeholder="自己寫一個標籤" ${full?"disabled":""}><button class="btn ghost" id="addtag" ${full?"disabled":""}>加上</button></div>`;
+  }
+  const o=OPEN.find(x=>x.k===k);
+  return `<h2 class="q">${o.q}</h2>${o.s?`<p class="sub">${o.s}</p>`:""}<textarea id="ta" maxlength="300">${esc(A[k])}</textarea>`;
+}
+function render(){
+  if(done)return renderResult();
+  const k=STEPS[i];
+  P.innerHTML=`<div class="step">第 ${i+1} / ${STEPS.length} 步</div><div class="bar"><i style="width:${i/STEPS.length*100}%"></i></div>${body(k)}
+  <div class="nav"><button class="btn ghost" id="back" ${i===0?"disabled":""}>上一步</button><button class="btn" id="next" ${stepOK(k)?"":"disabled"}>${i===STEPS.length-1?"看結果":"下一步"}</button></div>`;
+}
+
+function phrase(){
+  const out=[];
+  A.sc.forEach((v,r)=>{if(v===null||v===2)return;const side=v<2?0:1,str=v===0||v===4?"很":"有點";out.push([Math.abs(v-2),str+SC[r][side]])});
+  out.sort((a,b)=>b[0]-a[0]);
+  return out.slice(0,3).map(x=>x[1]);
+}
+function renderResult(){
+  const ph=phrase();
+  const title=ph.length?`在你眼中，我是個<em>${ph.join("、")}</em>的人`:"在你眼中，我是個說不上來、很平衡的人";
+  const rows=OPEN.filter(o=>!o.priv&&A[o.k].trim()).map(o=>`<small>${o.q}</small><p>${esc(A[o.k].trim())}</p>`).join("");
+  P.innerHTML=`<div class="result"><div class="step">謝謝你！</div><h2>${title}</h2>
+  <div>${A.tags.map(x=>`<span class="tag">#${esc(x)}</span>`).join("")}</div>
+  <div class="notes">${rows}</div>
+  <div class="nav"><button class="btn ghost" id="redo">重新填</button><button class="btn" id="copy">複製結果傳給我</button></div>
+  <div class="hint" id="status"></div></div>`;
+}
+function summaryText(){
+  let s=`【你覺得我是個怎樣的人？】\n${REL[A.rel]}・認識${LEN[A.len]}\n`;
+  s+=SC.map((p,r)=>`${p[0]} ${"○○○○○".split("").map((c,v)=>v===A.sc[r]?"●":c).join("")} ${p[1]}`).join("\n")+"\n";
+  s+=`標籤：${A.tags.map(x=>"#"+x).join(" ")}\n`;
+  OPEN.forEach(o=>{if(A[o.k].trim())s+=`・${o.q}\n　${A[o.k].trim()}\n`});
+  return s;
+}
+
+P.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.g){A[b.dataset.g]=+b.dataset.v;drawCake();render();return}
+  if(b.classList.contains("dot")){A.sc[+b.dataset.r]=+b.dataset.v;drawCake();render();const n=P.querySelector(`.dot[data-r="${b.dataset.r}"][data-v="${b.dataset.v}"]`);if(n)n.focus();return}
+  if(b.classList.contains("chip")){const t=b.dataset.t;A.tags=A.tags.includes(t)?A.tags.filter(x=>x!==t):A.tags.length<5?[...A.tags,t]:A.tags;drawCake();render();return}
+  if(b.id==="addtag"){addTag();return}
+  if(b.id==="back"){i--;drawCake();render();return}
+  if(b.id==="next"){if(i<STEPS.length-1){i++;drawCake();render();P.scrollIntoView({block:"nearest"})}else{done=true;drawCake();render();save()}return}
+  if(b.id==="redo"){sent=false;A=blank();i=0;done=false;drawCake();render();return}
+  if(b.id==="copy"){
+    const st=document.getElementById("status");
+    navigator.clipboard.writeText(summaryText()).then(()=>st.textContent="已複製！貼到私訊裡傳給我吧。",()=>st.textContent="複製失敗，可以直接截圖這張卡片。");
+  }
+});
+function addTag(){
+  const inp=document.getElementById("newtag"),t=inp.value.replace(/^#+/,"").trim().slice(0,12);
+  if(t&&!A.tags.includes(t)&&A.tags.length<5){A.tags=[...A.tags,t];drawCake();render();const n=document.getElementById("newtag");if(n)n.focus()}
+}
+P.addEventListener("keydown",e=>{if(e.target.id==="newtag"&&e.key==="Enter"){e.preventDefault();addTag()}});
+P.addEventListener("input",e=>{
+  if(e.target.id!=="ta")return;
+  A[STEPS[i]]=e.target.value;drawCake();
+  document.getElementById("next").disabled=!stepOK(STEPS[i]);
+});
+
+const FORM="https://docs.google.com/forms/d/e/1FAIpQLSfu9w24ORaw3P0EqkqqkLOkzj7RKnti5fGR9wiBoI-G7P5dxA/formResponse";
+const E={rel:"1249876095",len:"444689014",sc:["1415267331","1206290930","1422285410","1046338055","684798072","820906603"],tags:"1819406680",diff:"1593918888",style:"1341140536",hidden:"1887592351",intro:"323040078",secret:"149525668"};
+let sent=false;
+async function save(){
+  if(sent)return;
+  const st=()=>document.getElementById("status");
+  const f=new URLSearchParams();
+  if(A.rel===REL.length-1){f.append("entry."+E.rel,"__other_option__");f.append("entry."+E.rel+".other_option_response","其他")}
+  else f.append("entry."+E.rel,REL[A.rel]);
+  f.append("entry."+E.len,LEN[A.len]);
+  A.sc.forEach((v,r)=>f.append("entry."+E.sc[r],String(v+1)));
+  const own=A.tags.filter(t=>!TAGS.includes(t));
+  A.tags.filter(t=>TAGS.includes(t)).forEach(t=>f.append("entry."+E.tags,t));
+  if(own.length){f.append("entry."+E.tags,"__other_option__");f.append("entry."+E.tags+".other_option_response",own.join("、"))}
+  ["diff","style","hidden","intro","secret"].forEach(k=>{if(A[k].trim())f.append("entry."+E[k],A[k].trim())});
+  f.append("pageHistory","0,1,2,3,4");
+  if(st())st().textContent="送出中……";
+  try{
+    await fetch(FORM,{method:"POST",mode:"no-cors",body:f});
+    sent=true;
+    if(st())st().textContent="已經送出囉，謝謝你！";
+  }catch(err){if(st())st().textContent="沒能送出，可以按「複製結果傳給我」用私訊傳給我。"}
+}
+
+drawCake();render();
+}
+</script>
+</body>
+</html>
